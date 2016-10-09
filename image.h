@@ -27,6 +27,10 @@ struct RGBA {
 };
 
 struct RGB ParseHex(std::string hex);
+struct RGBA ParseHexAlpha(std::string hex);
+struct RGBA OpaqueRGBA(struct RGB rgb);
+std::vector<double> RGBA2Vector(struct RGBA rgba);
+struct RGBA Vector2RGBA(std::vector<double> v);
 
 class Image {
 private:
@@ -35,7 +39,8 @@ private:
   // Row-major pixel buffer.
   std::vector<struct RGBA> buffer_;
 
-  int row_col_to_index(int row, int col) const;
+  bool valid_xy(int x, int y) const;
+  int xy_to_index(int x, int y) const;
   void save_png_cleanup(FILE* fp, png_structp png_ptr, png_infop info_ptr,
       png_bytep* row_pointers);
 public:
@@ -45,17 +50,23 @@ public:
   Image(Image const&) = delete;
   Image& operator=(Image const&) = delete;
 
-  void set_red(int row, int col, unsigned char val);
-  void set_green(int row, int col, unsigned char val);
-  void set_blue(int row, int col, unsigned char val);
-  void set_alpha(int row, int col, unsigned char val);
+  // Sets a pixel value. Returns false if the (x, y) coordinates passed are
+  // out of bounds. Otherwise returns true.
+  bool set_red(int x, int y, unsigned char val);
+  bool set_green(int x, int y, unsigned char val);
+  bool set_blue(int x, int y, unsigned char val);
+  bool set_alpha(int x, int y, unsigned char val);
 
-  void set_rgb(int row, int col, unsigned char r, unsigned char g,
+  bool set_rgb(int x, int y, unsigned char r, unsigned char g,
       unsigned char b);
-  void set_rgb(int row, int col, struct RGB rgb);
-  void set_rgba(int row, int col, unsigned char r, unsigned char g,
+  bool set_rgb(int x, int y, struct RGB rgb);
+  bool set_rgba(int x, int y, unsigned char r, unsigned char g,
       unsigned char b, unsigned char a);
-  void set_rgba(int row, int col, struct RGBA rgba);
+  bool set_rgba(int x, int y, struct RGBA rgba);
+
+  // Gets a pixel value. Returns {0, 0, 0, 0} if the coordinates passed are out
+  // of bounds.
+  RGBA get_rgba(int x, int y);
 
   // Set all alpha bytes to 0xFF.
   void SetOpaque();
@@ -71,6 +82,6 @@ public:
   void SavePNG(std::string filepath);
 };
 
-}
+}  // namespace simple_image
 
 #endif  // SIMPLE_IMAGE_IMAGE_H_
